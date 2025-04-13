@@ -18,6 +18,20 @@
 
 Deep Research is a cutting-edge project built with Next.js 15, leveraging the power of AI models to generate in-depth research reports in approximately 2 minutes. Utilizing advanced "Thinking" and "Flash" models with internet access, Deep Research provides rapid and insightful analysis on a wide range of topics. Your privacy is paramount – all data can be processed and stored locally.
 
+### Quick Start - API
+
+Get a complete research report with a single API call:
+
+```bash
+# Replace with your actual deployment URL and access password
+curl -X POST https://your-deployment-url.com/api/research/query \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your-access-password" \
+  -d '{"query":"History of cars"}'
+```
+
+See the [API Documentation](#-api-documentation) section for more details.
+
 ## ✨ Features
 
 - **Rapid Deep Research:** Generates comprehensive research reports in about 2 minutes, significantly accelerating your research process.
@@ -29,6 +43,7 @@ Deep Research is a cutting-edge project built with Next.js 15, leveraging the po
 - **Artifact** Supports editing of research content, with two editing modes: WYSIWYM and Markdown. It is possible to adjust the reading level, article length and full text translation.
 - **Research History:** Support preservation of research history, you can review previous research results at any time and conduct in-depth research again.
 - **Local & Server API Support:** Offers flexibility with both local and server-side API calling options to suit your needs.
+- **RESTful API:** Provides a comprehensive API for programmatic access to all research functionality.
 - **Privacy-Focused:** Your data remains private and secure, as all data is stored locally on your browser.
 - **Support Multi-Key payload:** Support Multi-Key payload to improve API response efficiency.
 - **Multi-language Support**: English、简体中文.
@@ -40,6 +55,7 @@ Deep Research is a cutting-edge project built with Next.js 15, leveraging the po
 - [x] Support preservation of research history
 - [x] Support editing final report and search results
 - [x] Support for other LLM models
+- [x] RESTful API for programmatic access
 - [ ] Support file upload and local knowledge base
 
 ## 🚀 Getting Started
@@ -196,6 +212,136 @@ Deep Research is designed with your privacy in mind. **All research data and gen
 ## 📝 License
 
 Deep Research is released under the [MIT License](LICENSE). This license allows for free use, modification, and distribution for both commercial and non-commercial purposes.
+
+## 📖 API Documentation
+
+Deep Research provides a comprehensive API for programmatic access to all research functionality. You can find the API documentation at `/api/docs` when running the application.
+
+### Setting Up the API
+
+1. **Deploy Deep Research**:
+
+   - Follow the deployment instructions above to deploy Deep Research to your preferred platform (Vercel, Cloudflare, Docker, etc.)
+   - Alternatively, run it locally using `pnpm dev` or `npm run dev`
+
+2. **Configure API Authentication**:
+
+   - Set the `ACCESS_PASSWORD` environment variable to secure your API
+   - This password will be used as the API key for authentication
+
+3. **Configure AI Providers**:
+   - Set up the necessary API keys for the AI providers you want to use (Google Gemini, OpenAI, etc.)
+   - Set up the necessary API keys for search providers (Tavily, etc.)
+
+### Using the API
+
+The simplest way to use the API is with the all-in-one query endpoint:
+
+```bash
+curl -X POST https://your-deployment-url.com/api/research/query \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your-access-password" \
+  -d '{"query":"History of cars"}'
+```
+
+#### Example Request:
+
+```json
+{
+  "query": "History of cars",
+  "language": "en-US",
+  "provider": "google",
+  "searchProvider": "tavily",
+  "maxIterations": 2
+}
+```
+
+#### Example Response:
+
+```json
+{
+  "query": "History of cars",
+  "report": "# History of Cars\n\n## Introduction\n\nThe automobile has transformed human civilization...",
+  "metadata": {
+    "initialQueries": [...],
+    "learnings": [...],
+    "iterations": 2,
+    "language": "en-US",
+    "provider": "google",
+    "searchProvider": "tavily"
+  }
+}
+```
+
+### JavaScript Example
+
+```javascript
+async function performResearch(query) {
+  const response = await fetch(
+    "https://your-deployment-url.com/api/research/query",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer your-access-password",
+      },
+      body: JSON.stringify({
+        query: query,
+        provider: "google", // Default: Google Gemini
+        searchProvider: "tavily", // Default: Tavily for web search
+      }),
+    }
+  );
+
+  // Check if request was successful
+  if (!response.ok) {
+    throw new Error(`API request failed with status ${response.status}`);
+  }
+
+  const result = await response.json();
+  return result.report;
+}
+
+// Example usage
+performResearch("History of artificial intelligence")
+  .then((report) => console.log(report))
+  .catch((error) => console.error("Error:", error));
+```
+
+### Python Example
+
+```python
+import requests
+
+def perform_research(query):
+    url = "https://your-deployment-url.com/api/research/query"
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer your-access-password"
+    }
+    data = {
+        "query": query,
+        "provider": "google",  # Default: Google Gemini
+        "searchProvider": "tavily"  # Default: Tavily for web search
+    }
+
+    response = requests.post(url, json=data, headers=headers)
+    response.raise_for_status()  # Raise exception for HTTP errors
+
+    result = response.json()
+    return result["report"]
+
+# Example usage
+try:
+    report = perform_research("History of artificial intelligence")
+    print(report)
+except Exception as e:
+    print(f"Error: {e}")
+```
+
+For more detailed examples, see the [examples directory](examples/).
+
+For more details, see the [API Documentation](src/app/api/research/README.md).
 
 ## 🙏 Acknowledgements
 
