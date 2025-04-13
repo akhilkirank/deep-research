@@ -1,6 +1,15 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { z } from "zod";
 import { mockResearch } from "@/utils/mock-research";
+
+// Import settings
+import {
+  apiSchemaSettings,
+  tavilySearchSettings,
+  geminiSettings,
+  standardResearchPrompt,
+  getPromptTemplate,
+  appSettings
+} from "@/settings";
 
 export const runtime = "edge";
 export const preferredRegion = [
@@ -14,15 +23,8 @@ export const preferredRegion = [
   "kix1",
 ];
 
-// Simple schema for the query endpoint
-const QuerySchema = z.object({
-  query: z.string().min(1),
-  language: z.string().default("en-US"),
-  provider: z.string().default("google"),  // Default to Google (Gemini)
-  model: z.string().optional(),
-  searchProvider: z.string().default("tavily"),  // Default to Tavily for better search results
-  maxIterations: z.number().default(2),
-});
+// Use the schema from settings
+const QuerySchema = apiSchemaSettings.querySchema;
 
 // Function to make a POST request
 async function makePostRequest(url: string, headers: Record<string, string>, body: any) {
@@ -50,7 +52,7 @@ async function makePostRequest(url: string, headers: Record<string, string>, bod
 }
 
 // Search with Tavily API
-async function searchWithTavily(query: string, apiKey: string) {
+async function searchWithTavily(query: string, apiKey: string, options?: any) {
   console.log(`Searching for: "${query}" using Tavily API...`);
 
   try {
@@ -59,15 +61,16 @@ async function searchWithTavily(query: string, apiKey: string) {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`
     };
+    // Use search settings from settings file
     const body = {
       query: query,
-      search_depth: 'advanced',
-      include_answer: true,
-      max_results: 10,  // Increase max results for better coverage
-      include_domains: [],  // No domain restrictions
-      exclude_domains: [],  // No domain exclusions
-      include_raw_content: false,  // We don't need raw HTML content
-      include_images: false  // We don't need images
+      search_depth: tavilySearchSettings.searchDepth,
+      include_answer: tavilySearchSettings.includeAnswer,
+      max_results: options?.maxResults || tavilySearchSettings.maxResults,
+      include_domains: tavilySearchSettings.includeDomains,
+      exclude_domains: tavilySearchSettings.excludeDomains,
+      include_raw_content: tavilySearchSettings.includeRawContent,
+      include_images: tavilySearchSettings.includeImages
     };
 
     console.log('Tavily request body:', JSON.stringify(body));
@@ -92,48 +95,37 @@ async function searchWithTavily(query: string, apiKey: string) {
 }
 
 // Generate report with Google Gemini API
-async function generateReportWithGoogle(query: string, searchResults: any, apiKey: string) {
+async function generateReportWithGoogle(query: string, searchResults: any, apiKey: string, options?: any) {
   console.log(`Generating report for: "${query}" using Google Gemini API...`);
 
   try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`;
+    // Use the model from settings or options
+    const model = options?.model || geminiSettings.defaultModel;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
     const headers = {
       'Content-Type': 'application/json'
     };
 
-    // Create a prompt with the search results
-    let prompt = `You are a research assistant tasked with creating a comprehensive, factual, and well-structured research report on the topic: "${query}".\n\n`;
-    prompt += "I've gathered the following search results to help you create an accurate and informative report:\n\n";
+    // Get the appropriate prompt template based on the topic and style
+    const promptTemplate = getPromptTemplate(query, options?.reportStyle);
+
+    // Create the prompt using the template
+    let prompt = `${promptTemplate.systemPrompt}\n\n`;
+    prompt += `${promptTemplate.introduction}\n\n`;
 
     if (searchResults && searchResults.results) {
       searchResults.results.forEach((result: any, index: number) => {
-        prompt += `Source ${index + 1}: ${result.title}\n`;
-        prompt += `URL: ${result.url}\n`;
-        prompt += `Content: ${result.content}\n\n`;
+        prompt += promptTemplate.resultFormat(result, index);
       });
     }
 
-    prompt += "INSTRUCTIONS:\n";
-    prompt += "1. Analyze all the provided sources carefully\n";
-    prompt += "2. Extract key information, facts, dates, and insights relevant to the topic\n";
-    prompt += "3. Organize the information logically and coherently\n";
-    prompt += "4. Create a detailed research report with the following sections:\n";
-    prompt += "   - Introduction: Provide context and overview of the topic\n";
-    prompt += "   - Historical Background: Trace the origins and early development\n";
-    prompt += "   - Key Developments: Highlight major milestones, breakthroughs, and trends\n";
-    prompt += "   - Current State: Describe the present situation, applications, and relevance\n";
-    prompt += "   - Future Prospects: Discuss potential future directions and implications\n";
-    prompt += "   - Conclusion: Summarize key findings and their significance\n\n";
-    prompt += "5. Format the report in Markdown with proper headings (using # syntax), subheadings, bullet points, and numbered lists where appropriate\n";
-    prompt += "6. Include citations to the source materials using numbered references [1], [2], etc.\n";
-    prompt += "7. Add a References section at the end listing all sources used\n";
-    prompt += "8. Ensure the report is comprehensive, accurate, well-structured, and provides valuable insights on the topic\n\n";
-    prompt += "Your report should be detailed, informative, and reflect the most current understanding of the topic based on the provided sources.";
+    prompt += promptTemplate.instructions;
 
 
     console.log('Prompt length:', prompt.length);
     console.log('Prompt preview:', prompt.substring(0, 200) + '...');
 
+    // Use LLM settings from settings file
     const body = {
       contents: [
         {
@@ -145,29 +137,12 @@ async function generateReportWithGoogle(query: string, searchResults: any, apiKe
         }
       ],
       generationConfig: {
-        temperature: 0.1,  // Lower temperature for more factual output
-        maxOutputTokens: 8192,  // Increase token limit for longer reports
-        topP: 0.95,  // Slightly reduce diversity for more focused output
-        topK: 40  // Standard value for good quality
+        temperature: options?.temperature || geminiSettings.generationConfig.temperature,
+        maxOutputTokens: geminiSettings.generationConfig.maxOutputTokens,
+        topP: geminiSettings.generationConfig.topP,
+        topK: geminiSettings.generationConfig.topK
       },
-      safetySettings: [
-        {
-          category: "HARM_CATEGORY_HARASSMENT",
-          threshold: "BLOCK_ONLY_HIGH"
-        },
-        {
-          category: "HARM_CATEGORY_HATE_SPEECH",
-          threshold: "BLOCK_ONLY_HIGH"
-        },
-        {
-          category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-          threshold: "BLOCK_ONLY_HIGH"
-        },
-        {
-          category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-          threshold: "BLOCK_ONLY_HIGH"
-        }
-      ]
+      safetySettings: geminiSettings.safetySettings
     };
 
     const response = await makePostRequest(url, headers, body);
@@ -224,9 +199,17 @@ export async function POST(req: NextRequest) {
     console.log(`Provider: ${provider}, Search Provider: ${searchProvider}`);
 
     try {
+      // Extract additional options from the request
+      const options = {
+        reportStyle: result.data.reportStyle,
+        temperature: result.data.temperature,
+        maxResults: result.data.maxResults,
+        model: result.data.model
+      };
+
       // Step 1: Search for information using Tavily
       console.log('Step 1: Searching for information using Tavily...');
-      const searchResults = await searchWithTavily(query, TAVILY_API_KEY);
+      const searchResults = await searchWithTavily(query, TAVILY_API_KEY, options);
 
       if (!searchResults || !searchResults.results || searchResults.results.length === 0) {
         console.error('Search failed or returned no results, using mock implementation as fallback');
@@ -238,7 +221,7 @@ export async function POST(req: NextRequest) {
 
       // Step 2: Generate report using Google Gemini
       console.log('Step 2: Generating report using Google Gemini...');
-      const report = await generateReportWithGoogle(query, searchResults, GOOGLE_API_KEY);
+      const report = await generateReportWithGoogle(query, searchResults, GOOGLE_API_KEY, options);
 
       if (!report || report.trim() === '') {
         console.error('Report generation failed or returned empty report, using mock implementation as fallback');

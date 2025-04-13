@@ -44,6 +44,7 @@ See the [API Documentation](#-api-documentation) section for more details.
 - **Research History:** Support preservation of research history, you can review previous research results at any time and conduct in-depth research again.
 - **Local & Server API Support:** Offers flexibility with both local and server-side API calling options to suit your needs.
 - **RESTful API:** Provides a comprehensive API for programmatic access to all research functionality.
+- **Highly Customizable:** Extensive settings system allows customization of search behavior, LLM parameters, and prompt templates.
 - **Privacy-Focused:** Your data remains private and secure, as all data is stored locally on your browser.
 - **Support Multi-Key payload:** Support Multi-Key payload to improve API response efficiency.
 - **Multi-language Support**: English、简体中文.
@@ -343,7 +344,19 @@ For more detailed examples, see the [examples directory](examples/).
 
 For more details, see the [API Documentation](src/app/api/research/README.md).
 
-## 🙏 Acknowledgements
+## � Customizing Settings
+
+Deep Research provides an extensive settings system that allows you to customize various aspects of the application:
+
+- **Search Settings**: Control search depth, result count, and domain filtering
+- **LLM Settings**: Adjust model parameters like temperature, token limits, and safety settings
+- **Prompt Templates**: Customize the instructions given to the LLM for different types of research
+- **API Settings**: Configure API behavior, schemas, and response formats
+- **Application Settings**: Modify general application behavior and defaults
+
+All settings are organized in the `src/settings` directory. See the [Settings Documentation](src/settings/README.md) for detailed information on how to customize the application to your needs.
+
+## �🙏 Acknowledgements
 
 - [Next.js](https://nextjs.org/) - The React framework for building performant web applications.
 - [Shadcn UI](https://ui.shadcn.com/) - Beautifully designed components that helped streamline the UI development.
