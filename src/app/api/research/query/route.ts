@@ -109,6 +109,18 @@ async function generateReportWithGoogle(query: string, searchResults: any, apiKe
     // Get the appropriate prompt template based on the topic and style
     const promptTemplate = getPromptTemplate(query, options?.reportStyle);
 
+    // Adjust token limit based on detail level
+    let maxTokens = geminiSettings.generationConfig.maxOutputTokens;
+    if (options?.detailLevel === 'expert') {
+      maxTokens = 20000; // Maximum for extremely detailed reports
+    } else if (options?.detailLevel === 'comprehensive') {
+      maxTokens = 16384; // High detail level
+    } else if (options?.detailLevel === 'standard') {
+      maxTokens = 8192; // Standard detail level
+    } else if (options?.detailLevel === 'basic') {
+      maxTokens = 4096; // Basic detail level
+    }
+
     // Create the prompt using the template
     let prompt = `${promptTemplate.systemPrompt}\n\n`;
     prompt += `${promptTemplate.introduction}\n\n`;
@@ -138,7 +150,7 @@ async function generateReportWithGoogle(query: string, searchResults: any, apiKe
       ],
       generationConfig: {
         temperature: options?.temperature || geminiSettings.generationConfig.temperature,
-        maxOutputTokens: geminiSettings.generationConfig.maxOutputTokens,
+        maxOutputTokens: maxTokens,
         topP: geminiSettings.generationConfig.topP,
         topK: geminiSettings.generationConfig.topK
       },

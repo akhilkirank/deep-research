@@ -1,6 +1,6 @@
 /**
  * LLM Settings
- * 
+ *
  * This file contains settings related to the Language Model functionality.
  * Customize these settings to control how the LLM generates content.
  */
@@ -9,28 +9,28 @@
 export const geminiSettings = {
   // Default model to use
   defaultModel: 'gemini-2.0-flash-thinking-exp',
-  
+
   // Available models
   availableModels: [
     'gemini-2.0-flash-thinking-exp',  // Recommended for thinking tasks
     'gemini-2.0-flash-exp',           // Recommended for networking tasks
   ],
-  
+
   // Generation configuration
   generationConfig: {
     // Temperature controls randomness (0.0 = deterministic, 1.0 = creative)
-    temperature: 0.1,
-    
+    temperature: 0.2,
+
     // Maximum number of tokens to generate
-    maxOutputTokens: 8192,
-    
+    maxOutputTokens: 16384,
+
     // Top-p (nucleus sampling) parameter
     topP: 0.95,
-    
+
     // Top-k sampling parameter
     topK: 40
   },
-  
+
   // Safety settings
   safetySettings: [
     {
@@ -89,7 +89,7 @@ export const anthropicSettings = {
 export const llmProviderSettings = {
   // Default provider to use
   defaultProvider: 'google',
-  
+
   // Available providers
   availableProviders: ['google', 'openai', 'anthropic']
 };
@@ -98,12 +98,12 @@ export const llmProviderSettings = {
 export const topicSpecificLLMSettings = {
   // Academic research settings
   academic: {
-    temperature: 0.05,
-    maxOutputTokens: 10000,
-    topP: 0.90,
+    temperature: 0.15,
+    maxOutputTokens: 20000,
+    topP: 0.92,
     topK: 30
   },
-  
+
   // Creative writing settings
   creative: {
     temperature: 0.7,
@@ -111,7 +111,7 @@ export const topicSpecificLLMSettings = {
     topP: 0.98,
     topK: 50
   },
-  
+
   // Technical documentation settings
   technical: {
     temperature: 0.1,

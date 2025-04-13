@@ -75,7 +75,7 @@ Please strictly adhere to the following formatting guidelines when outputting te
 
 ## Generate Mermaid
 
-Generate a complete and accurate Mermaid diagram code based on the specified diagram type and data provided. Ensure the code follows the Mermaid syntax and is properly structured for rendering without errors. 
+Generate a complete and accurate Mermaid diagram code based on the specified diagram type and data provided. Ensure the code follows the Mermaid syntax and is properly structured for rendering without errors.
 
 ### Steps
 
@@ -90,7 +90,7 @@ Return the Mermaid diagram code as a plain text block. Format it as follows:
 \`\`\`mermaid
 <diagram type>
 <diagram content>
-\`\`\` 
+\`\`\`
 
 For example:
 \`\`\`mermaid
@@ -228,11 +228,40 @@ export function writeFinalReportPrompt(
     .map((learning) => `<learning>\n${learning}\n</learning>`)
     .join("\n");
   return [
-    `Given the following query from the user, write a final report on the topic using the learnings from research. Make it as as detailed as possible, aim for 3 or more pages, include ALL the learnings from research:\n<query>${query}</query>`,
+    `Given the following query from the user, write a comprehensive, highly detailed final report on the topic using the learnings from research. Make it extremely detailed and thorough, aim for 5 or more pages, and incorporate ALL the learnings from research:\n<query>${query}</query>`,
     `Here are all the learnings from previous research:\n<learnings>\n${learningsString}\n</learnings>`,
     requirement !== ""
       ? `Please write according to the user's writing requirements:\n<requirement>${requirement}</requirement>`
       : "",
-    `You need to write this report like a human researcher. Humans don not wrap their writing in markdown blocks. Contains diverse data information such as table, katex formulas, mermaid diagrams, etc. in the form of markdown syntax. **DO NOT** output anything other than report.`,
+    `Structure the report with the following sections (and additional subsections as needed):
+1. Executive Summary - A concise overview of the entire report (250-300 words)
+2. Introduction - Context, importance, and scope of the topic
+3. Background - Historical context and development of the topic
+4. Methodology - How the research was conducted (optional if not applicable)
+5. Key Findings - The main body of the report with multiple subsections covering different aspects
+6. Analysis - Critical examination of the findings with data-driven insights
+7. Implications - What the findings mean for stakeholders, industry, or society
+8. Future Outlook - Trends, predictions, and potential developments
+9. Recommendations - Actionable suggestions based on the research (if applicable)
+10. Conclusion - Summary of key points and final thoughts
+11. References - Sources cited throughout the report
+
+Include the following elements to enhance the report:
+- Tables to organize and compare data
+- Bullet points for lists of important information
+- Numbered lists for sequential processes or rankings
+- Visual elements described in markdown (charts, diagrams) where appropriate
+- Direct quotes from authoritative sources when relevant
+- Statistical data with proper citation
+- Case studies or examples to illustrate key points
+
+Ensure the report is:
+- Comprehensive and exhaustive in covering all aspects of the topic
+- Logically structured with clear transitions between sections
+- Evidence-based with specific facts, figures, and examples
+- Balanced in presenting different perspectives
+- Written in a professional, academic tone
+- Properly formatted using markdown syntax for readability`,
+    `You need to write this report like a human researcher. Humans do not wrap their writing in markdown blocks. Include diverse data information such as tables, katex formulas, mermaid diagrams, etc. in the form of markdown syntax. **DO NOT** output anything other than the report.`,
   ].join("\n\n");
 }
